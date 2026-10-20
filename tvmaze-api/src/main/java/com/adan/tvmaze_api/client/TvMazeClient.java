@@ -1,10 +1,16 @@
 package com.adan.tvmaze_api.client;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.client.RestClientException;
+
+import com.adan.tvmaze_api.exception.ShowNotFoundException;
 
 @Component
 public class TvMazeClient {
@@ -30,5 +36,28 @@ public class TvMazeClient {
         }
 
         return results;
+    }
+    
+    public Map<String, Object> getShow(long showId) {
+        Map<String, Object> show = restClient.get()
+                .uri("/shows/{show_id}", showId)
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                .onStatus(
+                        status -> status.value() == HttpStatus.NOT_FOUND.value(),
+                        (request, response) -> {
+                            throw new ShowNotFoundException(showId);
+                        }
+                )
+                .body(new ParameterizedTypeReference<
+                        Map<String, Object>>() {});
+
+        if (show == null || show.isEmpty()) {
+            throw new RestClientException(
+                    "TVMaze devolvió una respuesta vacía para el show " + showId
+            );
+        }
+
+        return show;
     }
 }

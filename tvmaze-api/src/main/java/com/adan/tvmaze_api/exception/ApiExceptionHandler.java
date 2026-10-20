@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -43,5 +45,59 @@ public class ApiExceptionHandler {
                 HttpStatus.BAD_GATEWAY,
                 "La respuesta de TVMaze no pudo procesarse."
         );
+    }
+    
+    @ExceptionHandler(ShowNotFoundException.class)
+    public ProblemDetail handleShowNotFound(
+            ShowNotFoundException exception) {
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND,
+                exception.getMessage()
+        );
+
+        problem.setTitle("Show no encontrado");
+
+        return problem;
+    }
+    
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ProblemDetail handleMethodValidation(
+            HandlerMethodValidationException exception) {
+
+        // Una validación fallida del valor de retorno es un error del servidor.
+        if (exception.isForReturnValue()) {
+            return ProblemDetail.forStatusAndDetail(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "La respuesta generada no cumple las validaciones."
+            );
+        }
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "Los parámetros no cumplen las validaciones. "
+                        + "show_id debe ser mayor que cero; "
+                        + "search_query debe contener texto y tener máximo "
+                        + "200 caracteres."
+        );
+
+        problem.setTitle("Parámetros inválidos");
+
+        return problem;
+    }
+    
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail handleTypeMismatch(
+            MethodArgumentTypeMismatchException exception) {
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "El parámetro '" + exception.getName()
+                        + "' tiene un formato incorrecto."
+        );
+
+        problem.setTitle("Formato de parámetro inválido");
+
+        return problem;
     }
 }

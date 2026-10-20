@@ -1,6 +1,7 @@
 package com.adan.tvmaze_api.show;
 
 import java.util.List;
+import java.util.Map;
 
 import com.adan.tvmaze_api.client.TvMazeClient;
 import com.adan.tvmaze_api.client.TvMazeShow;
@@ -40,5 +41,9 @@ public class ShowService {
         return show.webChannel() == null
                 ? null
                 : show.webChannel().name();
+    }
+    
+    public Map<String, Object> getShow(long showId) {
+        return tvMazeClient.getShow(showId);
     }
 }
