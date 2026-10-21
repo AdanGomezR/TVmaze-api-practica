@@ -42,6 +42,6 @@ public class ShowController {
             @Positive(message = "show_id debe ser mayor que cero.")
             Long showId) {
 
-        return showService.getShow(showId);
+        return showService.getShowWithComments(showId);
     }
 }

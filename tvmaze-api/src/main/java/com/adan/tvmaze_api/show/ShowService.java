@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.time.Instant;
 import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
 
 import com.adan.tvmaze_api.client.TvMazeSearchResult;
 import com.adan.tvmaze_api.client.TvMazeShow;
@@ -131,5 +132,23 @@ public class ShowService {
         log.debug("Show {} guardado en MongoDB", showId);
 
         return show;
+    }
+    
+    public Map<String, Object> getShowWithComments(long showId) {
+        Map<String, Object> show = getShow(showId);
+
+        List<CommentResponse> comments = commentRepository
+                .findByShowIdOrderByCreatedAtAscIdAsc(showId)
+                .stream()
+                .map(document -> new CommentResponse(
+                        document.comment(),
+                        document.rating()
+                ))
+                .toList();
+
+        Map<String, Object> response = new LinkedHashMap<>(show);
+        response.put("comments", comments);
+
+        return response;
     }
 }

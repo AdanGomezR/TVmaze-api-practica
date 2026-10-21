@@ -10,4 +10,7 @@ public interface CommentRepository
 
     List<CommentDocument> findByShowIdInOrderByCreatedAtAscIdAsc(
             Collection<Long> showIds);
+    
+    List<CommentDocument> findByShowIdOrderByCreatedAtAscIdAsc(
+            Long showId);
 }
