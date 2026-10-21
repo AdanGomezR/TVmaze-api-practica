@@ -10,6 +10,8 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import org.springframework.dao.DataAccessResourceFailureException;
+
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
@@ -65,7 +67,9 @@ public class ApiExceptionHandler {
     public ProblemDetail handleMethodValidation(
             HandlerMethodValidationException exception) {
 
-        // Una validación fallida del valor de retorno es un error del servidor.
+        /*
+         *  Una validación fallida del valor de retorno es un error del servidor.
+         */
         if (exception.isForReturnValue()) {
             return ProblemDetail.forStatusAndDetail(
                     HttpStatus.INTERNAL_SERVER_ERROR,
@@ -97,6 +101,21 @@ public class ApiExceptionHandler {
         );
 
         problem.setTitle("Formato de parámetro inválido");
+
+        return problem;
+    }
+    
+    @ExceptionHandler(DataAccessResourceFailureException.class)
+    public ProblemDetail handleDatabaseUnavailable(
+            DataAccessResourceFailureException exception) {
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "No fue posible acceder a la base de datos. "
+                        + "Intenta nuevamente más tarde."
+        );
+
+        problem.setTitle("Base de datos no disponible");
 
         return problem;
     }
