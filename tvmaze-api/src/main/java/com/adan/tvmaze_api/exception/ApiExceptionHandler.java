@@ -1,5 +1,10 @@
 package com.adan.tvmaze_api.exception;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -116,6 +121,46 @@ public class ApiExceptionHandler {
         );
 
         problem.setTitle("Base de datos no disponible");
+
+        return problem;
+    }
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail handleUnreadableBody(
+            HttpMessageNotReadableException exception) {
+
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "El cuerpo es obligatorio y debe contener un JSON válido "
+                        + "con tipos de datos correctos."
+        );
+    }
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ProblemDetail handleBodyValidation(
+            MethodArgumentNotValidException exception) {
+
+        List<Map<String, String>> errors = exception
+                .getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> Map.of(
+                        "field",
+                        error.getField().equals("showId")
+                                ? "show_id"
+                                : error.getField(),
+                        "message",
+                        error.getDefaultMessage() == null
+                                ? "Valor inválido."
+                                : error.getDefaultMessage()
+                ))
+                .toList();
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "El cuerpo de la petición contiene valores inválidos."
+        );
+
+        problem.setTitle("Error de validación");
+        problem.setProperty("errors", errors);
 
         return problem;
     }
